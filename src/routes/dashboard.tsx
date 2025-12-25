@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react'
 import { Background } from '../components/home/Background'
+import { useNavigate } from '@tanstack/react-router'
 
 const authStateFn = createServerFn({ method: 'GET' }).handler(async () => {
   const { isAuthenticated, userId } = await auth()
@@ -285,23 +286,24 @@ function Dashboard() {
     },
   ]
 
+  const navigate = useNavigate()
+
   return (
     <div className="relative min-h-screen flex flex-col selection:bg-indigo-500/30">
       <Background />
 
-      {/* Header */}
-      <header className="relative z-20 w-full border-b border-white/10 bg-black/20 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-white text-lg tracking-tight">
-              quizlearn
-            </span>
-          </div>
-          <UserButton />
+      <header className="w-full max-w-7xl px-6 py-6 md:py-8 flex justify-between items-center z-10">
+        <button
+          onClick={() => navigate({ to: '/' })}
+          className="text-lg md:text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
+        >
+          ai<span className="text-white/40">quiz</span>
+        </button>
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] md:text-[11px] font-bold uppercase tracking-wider text-white/70">
+          <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+          Build in public • MVP
         </div>
+        <UserButton />
       </header>
 
       {/* Main Content */}
