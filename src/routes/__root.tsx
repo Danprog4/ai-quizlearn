@@ -8,9 +8,26 @@ import {
   Scripts,
   createRootRoute,
 } from '@tanstack/react-router'
+import css from '../index.css?url'
 
 export const Route = createRootRoute({
-  component: RootComponent,
+  head: () => ({
+    meta: [
+      {
+        charSet: 'utf-8',
+      },
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
+      },
+      {
+        title: 'ai quizlearn',
+      },
+    ],
+    links: [{ rel: 'stylesheet', href: css }],
+  }),
+
+  shellComponent: RootDocument,
 })
 
 function RootComponent() {
