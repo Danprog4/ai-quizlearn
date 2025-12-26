@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { AnimatePresence } from 'framer-motion'
 import { useServerFn } from '@tanstack/react-start'
@@ -13,12 +13,18 @@ import { QuizSection } from '../components/home/QuizSection'
 import { RecapSection } from '../components/home/RecapSection'
 
 export const Route = createFileRoute('/')({
+  validateSearch: (search: Record<string, unknown>): { url?: string } => {
+    return {
+      url: search.url as string,
+    }
+  },
   component: Home,
 })
 
 type AppState = 'input' | 'loading' | 'quiz' | 'recap'
 
 export function Home() {
+  const { url: searchUrl } = Route.useSearch()
   const [url, setUrl] = useState('')
   const [inputError, setInputError] = useState<string | null>(null)
   const [appState, setAppState] = useState<AppState>('input')
@@ -38,18 +44,19 @@ export function Home() {
     try {
       new URL(string)
       return true
-    } catch (_) {
+    } catch {
       return false
     }
   }
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent, urlToSubmit?: string) => {
     e?.preventDefault()
-    if (!url.trim()) {
+    const finalUrl = urlToSubmit || url
+    if (!finalUrl.trim()) {
       setInputError('Paste a docs URL to continue.')
       return
     }
-    if (!validateUrl(url)) {
+    if (!validateUrl(finalUrl)) {
       setInputError("That doesn't look like a valid URL.")
       return
     }
@@ -58,7 +65,7 @@ export function Home() {
     setAppState('loading')
 
     try {
-      const quiz = await generateQuizFn({ data: { url } })
+      const quiz = await generateQuizFn({ data: { url: finalUrl } })
       setQuizData(quiz)
       setCurrentQuestion(0)
       setAnswers([])
@@ -71,6 +78,13 @@ export function Home() {
       setAppState('input')
     }
   }
+
+  useEffect(() => {
+    if (searchUrl) {
+      setUrl(searchUrl)
+      handleSubmit(undefined, searchUrl)
+    }
+  }, [searchUrl])
 
   const handleChipClick = (exampleUrl: string) => {
     setUrl(exampleUrl)
