@@ -9,14 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AiRecommendationsRouteImport } from './routes/ai-recommendations'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpSplatRouteImport } from './routes/sign-up.$'
 import { Route as SignInSplatRouteImport } from './routes/sign-in.$'
+import { Route as AiRecommendationsRecIdRouteImport } from './routes/ai-recommendations.$recId'
+import { Route as AiRecommendationsRecIdLessonLessonIdRouteImport } from './routes/ai-recommendations.$recId.lesson.$lessonId'
 
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiRecommendationsRoute = AiRecommendationsRouteImport.update({
+  id: '/ai-recommendations',
+  path: '/ai-recommendations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -34,48 +48,112 @@ const SignInSplatRoute = SignInSplatRouteImport.update({
   path: '/sign-in/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiRecommendationsRecIdRoute = AiRecommendationsRecIdRouteImport.update({
+  id: '/$recId',
+  path: '/$recId',
+  getParentRoute: () => AiRecommendationsRoute,
+} as any)
+const AiRecommendationsRecIdLessonLessonIdRoute =
+  AiRecommendationsRecIdLessonLessonIdRouteImport.update({
+    id: '/lesson/$lessonId',
+    path: '/lesson/$lessonId',
+    getParentRoute: () => AiRecommendationsRecIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-recommendations': typeof AiRecommendationsRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/pricing': typeof PricingRoute
+  '/ai-recommendations/$recId': typeof AiRecommendationsRecIdRouteWithChildren
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/ai-recommendations/$recId/lesson/$lessonId': typeof AiRecommendationsRecIdLessonLessonIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-recommendations': typeof AiRecommendationsRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/pricing': typeof PricingRoute
+  '/ai-recommendations/$recId': typeof AiRecommendationsRecIdRouteWithChildren
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/ai-recommendations/$recId/lesson/$lessonId': typeof AiRecommendationsRecIdLessonLessonIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-recommendations': typeof AiRecommendationsRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/pricing': typeof PricingRoute
+  '/ai-recommendations/$recId': typeof AiRecommendationsRecIdRouteWithChildren
   '/sign-in/$': typeof SignInSplatRoute
   '/sign-up/$': typeof SignUpSplatRoute
+  '/ai-recommendations/$recId/lesson/$lessonId': typeof AiRecommendationsRecIdLessonLessonIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/sign-in/$' | '/sign-up/$'
+  fullPaths:
+    | '/'
+    | '/ai-recommendations'
+    | '/dashboard'
+    | '/pricing'
+    | '/ai-recommendations/$recId'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/ai-recommendations/$recId/lesson/$lessonId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/sign-in/$' | '/sign-up/$'
-  id: '__root__' | '/' | '/dashboard' | '/sign-in/$' | '/sign-up/$'
+  to:
+    | '/'
+    | '/ai-recommendations'
+    | '/dashboard'
+    | '/pricing'
+    | '/ai-recommendations/$recId'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/ai-recommendations/$recId/lesson/$lessonId'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-recommendations'
+    | '/dashboard'
+    | '/pricing'
+    | '/ai-recommendations/$recId'
+    | '/sign-in/$'
+    | '/sign-up/$'
+    | '/ai-recommendations/$recId/lesson/$lessonId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiRecommendationsRoute: typeof AiRecommendationsRouteWithChildren
   DashboardRoute: typeof DashboardRoute
+  PricingRoute: typeof PricingRoute
   SignInSplatRoute: typeof SignInSplatRoute
   SignUpSplatRoute: typeof SignUpSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-recommendations': {
+      id: '/ai-recommendations'
+      path: '/ai-recommendations'
+      fullPath: '/ai-recommendations'
+      preLoaderRoute: typeof AiRecommendationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -99,12 +177,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-recommendations/$recId': {
+      id: '/ai-recommendations/$recId'
+      path: '/$recId'
+      fullPath: '/ai-recommendations/$recId'
+      preLoaderRoute: typeof AiRecommendationsRecIdRouteImport
+      parentRoute: typeof AiRecommendationsRoute
+    }
+    '/ai-recommendations/$recId/lesson/$lessonId': {
+      id: '/ai-recommendations/$recId/lesson/$lessonId'
+      path: '/lesson/$lessonId'
+      fullPath: '/ai-recommendations/$recId/lesson/$lessonId'
+      preLoaderRoute: typeof AiRecommendationsRecIdLessonLessonIdRouteImport
+      parentRoute: typeof AiRecommendationsRecIdRoute
+    }
   }
 }
 
+interface AiRecommendationsRecIdRouteChildren {
+  AiRecommendationsRecIdLessonLessonIdRoute: typeof AiRecommendationsRecIdLessonLessonIdRoute
+}
+
+const AiRecommendationsRecIdRouteChildren: AiRecommendationsRecIdRouteChildren =
+  {
+    AiRecommendationsRecIdLessonLessonIdRoute:
+      AiRecommendationsRecIdLessonLessonIdRoute,
+  }
+
+const AiRecommendationsRecIdRouteWithChildren =
+  AiRecommendationsRecIdRoute._addFileChildren(
+    AiRecommendationsRecIdRouteChildren,
+  )
+
+interface AiRecommendationsRouteChildren {
+  AiRecommendationsRecIdRoute: typeof AiRecommendationsRecIdRouteWithChildren
+}
+
+const AiRecommendationsRouteChildren: AiRecommendationsRouteChildren = {
+  AiRecommendationsRecIdRoute: AiRecommendationsRecIdRouteWithChildren,
+}
+
+const AiRecommendationsRouteWithChildren =
+  AiRecommendationsRoute._addFileChildren(AiRecommendationsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiRecommendationsRoute: AiRecommendationsRouteWithChildren,
   DashboardRoute: DashboardRoute,
+  PricingRoute: PricingRoute,
   SignInSplatRoute: SignInSplatRoute,
   SignUpSplatRoute: SignUpSplatRoute,
 }

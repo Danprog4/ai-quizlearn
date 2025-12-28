@@ -35,6 +35,43 @@ const generateQuizSchema = z.object({ url: z.string().url() })
 export const generateQuiz = createServerFn()
   .inputValidator(generateQuizSchema)
   .handler(async ({ data }) => {
+    const { userId, isAuthenticated, has } = await auth()
+    if (!isAuthenticated || !userId) {
+      throw new Error('Unauthorized')
+    }
+
+    const hasPaidPlan = has({ plan: 'pro' })
+
+    const client = clerkClient()
+    const user = await client.users.getUser(userId)
+    const metadata = user.publicMetadata as {
+      dailyQuizCount?: number
+      lastQuizDate?: string
+    }
+
+    const now = new Date()
+    const lastDate = metadata.lastQuizDate
+      ? new Date(metadata.lastQuizDate)
+      : null
+
+    // Check if it's a new day (simple check)
+    const isNewDay = !lastDate || lastDate.toDateString() !== now.toDateString()
+
+    let currentDailyCount = isNewDay ? 0 : metadata.dailyQuizCount || 0
+
+    if (!hasPaidPlan && currentDailyCount >= 3) {
+      throw new Error('DAILY_LIMIT_REACHED')
+    }
+
+    // Increment count immediately to prevent race conditions or free usage
+    await client.users.updateUser(userId, {
+      publicMetadata: {
+        ...metadata,
+        dailyQuizCount: currentDailyCount + 1,
+        lastQuizDate: now.toISOString(),
+      },
+    })
+
     const { object } = await generateObject({
       model: openrouter.chat('google/gemini-3-flash-preview'),
       schema: QuizResponseSchema,
@@ -129,15 +166,116 @@ export const getLeaderboard = createServerFn().handler(async () => {
 })
 
 export const getUserStats = createServerFn().handler(async () => {
-  const { userId, isAuthenticated } = await auth()
+  const { userId, isAuthenticated, has } = await auth()
   if (!isAuthenticated || !userId) return null
+
+  const hasPaidPlan = has({ plan: 'pro' })
 
   const client = clerkClient()
   const user = await client.users.getUser(userId)
-  return user.publicMetadata as {
+  const metadata = user.publicMetadata as {
     totalScore?: number
     quizCount?: number
     streak?: number
     lastQuizDate?: string
+    dailyQuizCount?: number
+  }
+
+  const now = new Date()
+  const lastDate = metadata.lastQuizDate
+    ? new Date(metadata.lastQuizDate)
+    : null
+  const isNewDay = !lastDate || lastDate.toDateString() !== now.toDateString()
+
+  return {
+    ...metadata,
+    dailyQuizCount: isNewDay ? 0 : metadata.dailyQuizCount || 0,
+    isPro: hasPaidPlan,
   }
 })
+
+const LessonSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  quizFocus: z.string(),
+})
+
+const RecommendationSchema = z.object({
+  id: z.string(),
+  topic: z.string(),
+  reason: z.string(),
+  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']),
+  estimatedTime: z.string(),
+  lessons: z.array(LessonSchema).min(4).max(6),
+})
+
+const RecommendationsResponseSchema = z.object({
+  recommendations: z.array(RecommendationSchema).length(3),
+})
+
+export type Lesson = z.infer<typeof LessonSchema>
+export type Recommendation = z.infer<typeof RecommendationSchema>
+
+export const getRecommendations = createServerFn().handler(async () => {
+  const { isAuthenticated } = await auth()
+  if (!isAuthenticated) return []
+
+  // In a real app, we would fetch user history here
+  const { object } = await generateObject({
+    model: openrouter.chat('google/gemini-3-flash-preview'),
+    schema: RecommendationsResponseSchema,
+    prompt: `Generate 3 personalized learning recommendations for a web developer.
+Topics should include React, TypeScript, Modern CSS, and AI engineering.
+Make the reasons specific and motivating.
+
+Return for each recommendation:
+- id: a short slug like "react-hooks"
+- topic: a concise title
+- reason: why it matters
+- difficulty: Beginner, Intermediate, or Advanced
+- estimatedTime: a human-readable estimate like "2 weeks"
+- lessons: 4 to 6 lessons with id, title, description, and quizFocus
+
+Use short ids like "lesson-1" and unique recommendation ids.`,
+  })
+
+  return object.recommendations
+})
+
+const LessonQuizSchema = z.object({
+  topic: z.string(),
+  lessonTitle: z.string(),
+  lessonFocus: z.string(),
+})
+
+export const generateLessonQuiz = createServerFn()
+  .inputValidator(LessonQuizSchema)
+  .handler(async ({ data }) => {
+    const { userId, isAuthenticated } = await auth()
+    if (!isAuthenticated || !userId) {
+      throw new Error('Unauthorized')
+    }
+
+    const { object } = await generateObject({
+      model: openrouter.chat('google/gemini-3-flash-preview'),
+      schema: QuizResponseSchema,
+      prompt: `You are a quiz generator. Create a quiz for the lesson below.
+
+Topic: ${data.topic}
+Lesson: ${data.lessonTitle}
+Focus: ${data.lessonFocus}
+
+Generate exactly 3 multiple-choice questions. Each question should:
+1. Test understanding of the lesson focus
+2. Have 4 answer options (only one correct)
+3. Include a brief explanation of why the correct answer is right
+
+Make the questions progressively harder from question 1 to 3.
+
+The quiz title should reflect the lesson title.
+The description should be a brief overview of what concepts are being tested.`,
+    })
+
+    return object
+  })

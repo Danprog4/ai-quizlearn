@@ -22,7 +22,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'ai quizlearn',
+        title: 'quizler - AI Quiz Generator',
       },
     ],
     links: [{ rel: 'stylesheet', href: css }],

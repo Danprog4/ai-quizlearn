@@ -16,6 +16,7 @@ import type { QuizResponse } from '../../server/main/main'
 import { useNavigate } from '@tanstack/react-router'
 import { useServerFn } from '@tanstack/react-start'
 import { updateUserStats } from '../../server/main/main'
+import { clearRecommendationsCache } from '../../lib/recommendations'
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/tanstack-react-start'
 
@@ -46,6 +47,10 @@ export function RecapSection({
       })
     }
   }, [isSignedIn, isLoaded])
+
+  useEffect(() => {
+    clearRecommendationsCache()
+  }, [])
 
   const handleSignIn = () => {
     navigate({ to: '/sign-in/$' })

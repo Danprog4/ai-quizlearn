@@ -25,13 +25,19 @@ interface UserStats {
 }
 
 export const getFeatures = (
-  leaderboard: LeaderboardUser[],
-  stats: UserStats | null,
+  leaderboard: LeaderboardUser[] = [],
+  stats: UserStats | null = null,
   handlePickClick: (url: string) => void,
+  isPro: boolean = false,
+  handleLockedPickClick: () => void = () => {},
 ): Omit<FeatureCardProps, 'delay'>[] => [
   {
     icon: <Sparkles className="w-6 h-6 text-violet-400" />,
     title: 'AI Recommendations',
+    id: 'ai-recommendations',
+    isComingSoon: false,
+    isProOnly: true,
+    isLocked: !isPro,
     description:
       'Personalized learning paths based on your quiz performance and interests.',
     longDescription:
@@ -57,6 +63,8 @@ export const getFeatures = (
   {
     icon: <BookOpen className="w-6 h-6 text-emerald-400" />,
     title: "Editor's Picks",
+    isProOnly: true,
+    isLocked: !isPro,
     description: 'Curated quizzes handpicked by our team of experts.',
     longDescription:
       "Don't know where to start? Our Editors Pick section features the most high-quality, up-to-date documentation available. We personally verify each source to ensure the generated quizzes are accurate and challenging.",
@@ -75,9 +83,19 @@ export const getFeatures = (
             key={pick.name}
             onClick={(e) => {
               e.stopPropagation()
+              if (!isPro) {
+                handleLockedPickClick()
+                return
+              }
               handlePickClick(pick.url)
             }}
-            className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-center group/pick"
+            disabled={!isPro}
+            aria-disabled={!isPro}
+            className={`p-3 rounded-lg bg-white/5 text-center transition-colors group/pick ${
+              isPro
+                ? 'hover:bg-white/10'
+                : 'opacity-50 cursor-not-allowed'
+            }`}
           >
             <div className="w-full h-8 rounded bg-emerald-500/10 mb-2 flex items-center justify-center group-hover/pick:bg-emerald-500/20 transition-colors">
               <BookOpen size={14} className="text-emerald-400/40" />
@@ -140,6 +158,8 @@ export const getFeatures = (
   {
     icon: <Swords className="w-6 h-6 text-rose-400" />,
     title: 'Live Competitions',
+    isProOnly: true,
+    isLocked: !isPro,
     description:
       'Join real-time quiz battles. Challenge friends or random opponents.',
     longDescription:
@@ -164,6 +184,8 @@ export const getFeatures = (
     icon: <BarChart3 className="w-6 h-6 text-cyan-400" />,
     title: 'Learning Analytics',
     description: 'Deep insights into your learning journey and wins.',
+    isProOnly: false,
+    isLocked: false,
     longDescription:
       'Beyond just scores, we track your performance per technology. Identify whether you need to brush up on React state management or CSS layout through our detailed historical charts.',
     gradient: 'bg-gradient-to-br from-cyan-500/10 to-blue-500/10',
@@ -223,6 +245,8 @@ export const getFeatures = (
       'Learning is better social. Create a private group for your company or university class, share custom docs URLs, and maintain a private leaderboard to foster healthy competition.',
     gradient: 'bg-gradient-to-br from-indigo-500/10 to-violet-500/10',
     accentColor: 'bg-indigo-500/20',
+    isProOnly: true,
+    isLocked: !isPro,
     preview: (
       <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5">
         <div className="flex -space-x-2">

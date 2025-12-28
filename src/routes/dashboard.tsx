@@ -3,11 +3,19 @@ import { createServerFn } from '@tanstack/react-start'
 import { auth } from '@clerk/tanstack-react-start/server'
 import { UserButton } from '@clerk/tanstack-react-start'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Crown, Bell, Target } from 'lucide-react'
 import { Background } from '../components/home/Background'
 import { useNavigate } from '@tanstack/react-router'
-import { getLeaderboard, getUserStats } from '../server/main/main'
+import {
+  getLeaderboard,
+  getRecommendations,
+  getUserStats,
+} from '../server/main/main'
+import {
+  getCachedRecommendations,
+  prefetchRecommendations,
+} from '../lib/recommendations'
 import {
   FeatureCard,
   FeatureCardProps,
@@ -42,15 +50,58 @@ export const Route = createFileRoute('/dashboard')({
       stats: context.stats,
     }
   },
+  pendingComponent: DashboardPending,
+  pendingMs: 150,
 })
+
+function DashboardPending() {
+  return (
+    <div className="relative min-h-screen flex flex-col selection:bg-indigo-500/30">
+      <Background />
+      <header className="w-full max-w-7xl px-6 py-6 md:py-8 flex justify-between items-center z-10 mx-auto">
+        <div className="text-lg md:text-xl font-bold tracking-tight text-white/60">
+          <span className="text-white/30">quizler</span>
+        </div>
+        <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10" />
+      </header>
+      <main className="flex-1 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <div className="h-6 w-40 bg-white/10 rounded-full mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-40 rounded-2xl bg-white/5 border border-white/10 animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
 
 function Dashboard() {
   const navigate = useNavigate()
+  // @ts-ignore
   const { leaderboard, stats } = Route.useLoaderData()
   const [selectedFeature, setSelectedFeature] = useState<Omit<
     FeatureCardProps,
     'delay'
   > | null>(null)
+
+  const isPro = stats?.isPro || false
+
+  useEffect(() => {
+    if (!isPro) return
+    const cached = getCachedRecommendations()
+    if (cached && cached.length > 0) return
+
+    prefetchRecommendations(getRecommendations)
+      .catch((err) => {
+        console.error('Failed to prefetch recommendations:', err)
+      })
+  }, [isPro])
 
   const handlePickClick = (url: string) => {
     navigate({
@@ -65,7 +116,9 @@ function Dashboard() {
     })
   }
 
-  const features = getFeatures(leaderboard, stats, handlePickClick)
+  const features = getFeatures(leaderboard, stats, handlePickClick, isPro, () =>
+    navigate({ to: '/pricing' }),
+  )
 
   return (
     <div className="relative min-h-screen flex flex-col selection:bg-indigo-500/30">
@@ -80,18 +133,25 @@ function Dashboard() {
         )}
       </AnimatePresence>
 
-      <header className="w-full max-w-7xl px-6 py-6 md:py-8 flex justify-between items-center z-10">
+      <header className="w-full max-w-7xl px-6 py-6 md:py-8 flex justify-between items-center z-10 mx-auto">
         <button
           onClick={() => navigate({ to: '/', search: { url: undefined } })}
           className="text-lg md:text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
         >
-          ai<span className="text-white/40">quiz</span>
+          <span className="text-white/40">quizler</span>
         </button>
-        <div className="flex absolute left-1/2 -translate-x-1/2 items-center gap-2 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] md:text-[11px] font-bold uppercase tracking-wider text-white/70">
-          <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-          Build in public • MVP
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] md:text-[11px] font-bold uppercase tracking-wider text-white/70">
+            <span className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            Build in public • MVP
+          </div>
+          {isPro && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-[9px] md:text-[11px] font-bold uppercase tracking-wider text-amber-400">
+              PRO MEMBER
+            </div>
+          )}
+          <UserButton />
         </div>
-        <UserButton />
       </header>
 
       {/* Main Content */}
@@ -129,7 +189,19 @@ function Dashboard() {
                 key={feature.title}
                 {...feature}
                 delay={0.1 * index}
-                onClick={() => setSelectedFeature(feature)}
+                onClick={() => {
+                  if (feature.isLocked) {
+                    navigate({ to: '/pricing' })
+                    return
+                  }
+
+                  if (feature.id === 'ai-recommendations') {
+                    // @ts-ignore - Route exists but types might not be generated yet
+                    navigate({ to: '/ai-recommendations' })
+                  } else {
+                    setSelectedFeature(feature)
+                  }
+                }}
               />
             ))}
           </div>
