@@ -23,6 +23,10 @@ function RouteComponent() {
               Generate quizzes from any docs URL, track your streaks, and build
               a personalized learning path powered by AI recommendations.
             </p>
+            <p className="mt-4 text-sm text-white/50 max-w-xl">
+              Building this app in public on Twitter. I’m 15 and sharing the
+              whole journey as I learn and ship.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
