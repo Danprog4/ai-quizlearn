@@ -1,25 +1,25 @@
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Link2, ArrowRight } from "lucide-react";
-import { cn } from "../../lib/utils";
+import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link2, ArrowRight } from 'lucide-react'
+import { cn } from '../../lib/utils'
 
 interface InputSectionProps {
-  url: string;
-  setUrl: (url: string) => void;
-  handleSubmit: (e?: React.FormEvent) => void;
-  inputError: string | null;
-  handleChipClick: (url: string) => void;
+  url: string
+  setUrl: (url: string) => void
+  handleSubmit: (e?: React.FormEvent) => void
+  inputError: string | null
+  handleChipClick: (url: string) => void
+  variant?: 'hero' | 'compact' | 'minimal'
 }
 
 const EXAMPLES = [
-  { name: "React docs", url: "https://react.dev" },
-  { name: "Stripe API", url: "https://docs.stripe.com/api" },
+  { name: 'React docs', url: 'https://react.dev' },
+  { name: 'Stripe API', url: 'https://docs.stripe.com/api' },
   {
-    name: "Kubernetes",
-    url: "https://kubernetes.io/docs/home/",
+    name: 'Kubernetes',
+    url: 'https://kubernetes.io/docs/home/',
   },
-  { name: "README", url: "https://github.com/framer/motion" },
-];
+]
 
 export function InputSection({
   url,
@@ -27,7 +27,26 @@ export function InputSection({
   handleSubmit,
   inputError,
   handleChipClick,
+  variant = 'hero',
 }: InputSectionProps) {
+  const isMinimal = variant === 'minimal'
+  const wrapperClass = cn(
+    'relative flex flex-col sm:flex-row sm:items-center p-2 transition-all duration-300',
+    isMinimal
+      ? 'rounded-2xl bg-[#0b0f1a]/80 border border-white/10 focus-within:border-indigo-500/60 focus-within:ring-4 focus-within:ring-indigo-500/10'
+      : 'rounded-2xl bg-white/5 border border-white/10 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20',
+    inputError ? 'border-red-500/50' : '',
+  )
+  const inputClass = cn(
+    'flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/25 w-full',
+    isMinimal ? 'py-4 px-4 text-base md:text-lg' : 'py-3 px-4 sm:px-0 text-lg',
+  )
+  const buttonClass = cn(
+    'w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap',
+    isMinimal
+      ? 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-[0_0_24px_rgba(79,70,229,0.35)]'
+      : 'bg-indigo-600 text-white hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.4)]',
+  )
   return (
     <motion.div
       key="input"
@@ -35,25 +54,33 @@ export function InputSection({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
-      className="w-full max-w-2xl">
-      <div className="text-center space-y-4 mb-12">
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
-          Turn docs into a quiz.{" "}
-          <span className="text-indigo-500/80">With AI.</span>
-        </h1>
-        <p className="text-base md:text-lg text-white/60 font-light">
-          Paste a documentation URL to check your understanding. No sign-up.
-        </p>
-      </div>
+      className={cn('w-full', isMinimal ? 'max-w-none' : 'max-w-2xl')}
+    >
+      {variant === 'hero' && (
+        <div className="text-center space-y-4 mb-12">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white">
+            Turn docs into a quiz.{' '}
+            <span className="text-indigo-500/80">With AI.</span>
+          </h1>
+          <p className="text-base md:text-lg text-white/60 font-light">
+            Paste a documentation URL to check your understanding. No sign-up.
+          </p>
+        </div>
+      )}
+      {variant === 'compact' && (
+        <div className="text-left space-y-3 mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
+            Try it on any docs page
+          </h2>
+          <p className="text-sm md:text-base text-white/60">
+            Paste a URL and get a 3-question quiz instantly. No account needed.
+          </p>
+        </div>
+      )}
 
       <div className="w-full space-y-6">
         <form onSubmit={handleSubmit} className="relative group">
-          <div
-            className={cn(
-              "relative flex flex-col sm:flex-row sm:items-center p-2 rounded-2xl bg-white/5 border transition-all duration-300",
-              "border-white/10 focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/20",
-              inputError ? "border-red-500/50" : ""
-            )}>
+          <div className={wrapperClass}>
             <div className="hidden sm:flex pl-4 pr-3 text-white/40 group-focus-within:text-indigo-400 transition-colors">
               <Link2 size={20} />
             </div>
@@ -62,11 +89,9 @@ export function InputSection({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Paste your docs URL..."
-              className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/25 py-3 px-4 sm:px-0 text-lg w-full"
+              className={inputClass}
             />
-            <button
-              type="submit"
-              className="w-full sm:w-auto mt-2 sm:mt-0 sm:ml-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold transition-all hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-[0.98] whitespace-nowrap">
+            <button type="submit" className={buttonClass}>
               Generate quiz
             </button>
           </div>
@@ -78,14 +103,20 @@ export function InputSection({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="text-sm text-red-400 text-center">
+              className="text-sm text-red-400 text-center"
+            >
               {inputError}
             </motion.p>
           )}
         </AnimatePresence>
 
         {/* Example chips */}
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div
+          className={cn(
+            'flex flex-wrap items-center gap-3',
+            isMinimal ? 'justify-start' : 'justify-center',
+          )}
+        >
           <span className="text-xs font-bold uppercase tracking-widest text-white/20 mr-1">
             Try:
           </span>
@@ -93,24 +124,26 @@ export function InputSection({
             <button
               key={chip.name}
               onClick={() => handleChipClick(chip.url)}
-              className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/40 hover:bg-indigo-500/15 hover:border-indigo-500/30 hover:text-indigo-400 transition-all active:scale-95">
+              className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white/40 hover:bg-indigo-500/15 hover:border-indigo-500/30 hover:text-indigo-400 transition-all active:scale-95"
+            >
               {chip.name}
             </button>
           ))}
         </div>
 
         {/* How it works */}
-        <div className="pt-12 flex justify-center">
-          <div className="flex items-center gap-6 text-[11px] font-medium uppercase tracking-[0.2em] text-white/20">
-            <span>Paste</span>
-            <ArrowRight size={10} className="text-white/10" />
-            <span>5 questions</span>
-            <ArrowRight size={10} className="text-white/10" />
-            <span>Score + recap</span>
+        {!isMinimal && (
+          <div className="pt-12 flex justify-center">
+            <div className="flex items-center gap-6 text-[11px] font-medium uppercase tracking-[0.2em] text-white/20">
+              <span>Paste</span>
+              <ArrowRight size={10} className="text-white/10" />
+              <span>3 questions</span>
+              <ArrowRight size={10} className="text-white/10" />
+              <span>Score + recap</span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
-  );
+  )
 }
-

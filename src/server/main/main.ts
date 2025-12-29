@@ -36,41 +36,38 @@ export const generateQuiz = createServerFn()
   .inputValidator(generateQuizSchema)
   .handler(async ({ data }) => {
     const { userId, isAuthenticated, has } = await auth()
-    if (!isAuthenticated || !userId) {
-      throw new Error('Unauthorized')
+    const isSignedIn = isAuthenticated && Boolean(userId)
+    const hasPaidPlan = isSignedIn ? has({ plan: 'pro' }) : false
+
+    if (isSignedIn && userId) {
+      const client = clerkClient()
+      const user = await client.users.getUser(userId)
+      const metadata = user.publicMetadata as {
+        dailyQuizCount?: number
+        lastQuizDate?: string
+      }
+
+      const now = new Date()
+      const lastDate = metadata.lastQuizDate
+        ? new Date(metadata.lastQuizDate)
+        : null
+
+      const isNewDay =
+        !lastDate || lastDate.toDateString() !== now.toDateString()
+      const currentDailyCount = isNewDay ? 0 : metadata.dailyQuizCount || 0
+
+      if (!hasPaidPlan && currentDailyCount >= 3) {
+        throw new Error('DAILY_LIMIT_REACHED')
+      }
+
+      await client.users.updateUser(userId, {
+        publicMetadata: {
+          ...metadata,
+          dailyQuizCount: currentDailyCount + 1,
+          lastQuizDate: now.toISOString(),
+        },
+      })
     }
-
-    const hasPaidPlan = has({ plan: 'pro' })
-
-    const client = clerkClient()
-    const user = await client.users.getUser(userId)
-    const metadata = user.publicMetadata as {
-      dailyQuizCount?: number
-      lastQuizDate?: string
-    }
-
-    const now = new Date()
-    const lastDate = metadata.lastQuizDate
-      ? new Date(metadata.lastQuizDate)
-      : null
-
-    // Check if it's a new day (simple check)
-    const isNewDay = !lastDate || lastDate.toDateString() !== now.toDateString()
-
-    let currentDailyCount = isNewDay ? 0 : metadata.dailyQuizCount || 0
-
-    if (!hasPaidPlan && currentDailyCount >= 3) {
-      throw new Error('DAILY_LIMIT_REACHED')
-    }
-
-    // Increment count immediately to prevent race conditions or free usage
-    await client.users.updateUser(userId, {
-      publicMetadata: {
-        ...metadata,
-        dailyQuizCount: currentDailyCount + 1,
-        lastQuizDate: now.toISOString(),
-      },
-    })
 
     const { object } = await generateObject({
       model: openrouter.chat('google/gemini-3-flash-preview'),

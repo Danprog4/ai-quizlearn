@@ -182,11 +182,11 @@ export function RecapSection({
         >
           <Zap className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-yellow-400" />
           <h3 className="text-lg md:text-xl font-bold text-white mb-2">
-            Ready to level up?
+            Did you like it?
           </h3>
           <p className="text-sm md:text-base text-white/60 mb-6">
-            Create an account to track progress, compete on leaderboards, and
-            unlock more quizzes!
+            Save your progress and access your dashboard by creating a free
+            account.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
@@ -194,7 +194,7 @@ export function RecapSection({
               className="w-full sm:w-auto px-6 md:px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold transition-all hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] flex items-center justify-center gap-2 text-sm md:text-base"
             >
               <Lock size={16} />
-              Sign up to continue
+              Save progress
             </button>
             <button
               onClick={handleRestartQuiz}
