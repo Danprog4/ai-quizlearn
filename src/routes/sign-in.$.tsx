@@ -14,7 +14,7 @@ function RouteComponent() {
         <div className="space-y-8">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-white/70 mb-5">
-              <span className="text-white/40">quizler</span>
+              <span className="text-white/40">quizler - AI Quiz Generator</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
               Master documentation faster with focused quizzes.
